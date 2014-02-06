@@ -1,21 +1,15 @@
 <?php 
     
-    exec('grep -c ^processor /proc/cpuinfo',$resultNumberOfCores);
+	$loadAvgPercents = array();
+    exec('/usr/sbin/sysctl vm.loadavg',$resultLoadAvg);
     header('Content-Type: application/json; charset=UTF-8');
-    $numberOfCores = $resultNumberOfCores[0];
-
-    exec('cat /proc/loadavg | awk \'{print $1","$2","$3}\'',$resultLoadAvg);
-    header('Content-Type: application/json; charset=UTF-8');
-
-    $loadAvg = explode(',',$resultLoadAvg[0]);
-
-    echo json_encode(
-        array_map(
-            "convertToPercentage",
-            $loadAvg,
-            array_fill(0, count($loadAvg), $numberOfCores)
-        )
-    );
+    $loadAvg = explode(" ", $resultLoadAvg[0]);
+	foreach ($loadAvg as $item) {
+		if(is_numeric($item)) {
+			array_push($loadAvgPercents, $item);
+		}
+	}
+    echo json_encode($loadAvgPercents);
     
     function convertToPercentage($value, $numberOfCores){
         return array($value, (int)($value * 100 / $numberOfCores));
